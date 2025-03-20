@@ -1,21 +1,27 @@
-
 const express = require('express');
 const { google } = require('googleapis');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configuração do Google Sheets API
-const CLIENT_ID = '911431976768-249r4fdg228co8lbbjcfdateq3bhqcm5.apps.googleusercontent.com';
-const CLIENT_SECRET = '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';
-const REDIRECT_URI = 'https://representantes-comparar.vercel.app/oauth2callback';
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
 
-// Middleware para JSON
+// Middleware para JSON e Sessões
 app.use(bodyParser.json());
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
 
 // Rota para a raiz ("/")
 app.get('/', (req, res) => {
@@ -29,11 +35,12 @@ app.get('/', (req, res) => {
     <script>
       async function fetchTopItems(months) {
         try {
-          const response = await fetch(`/getTopItems?months=${months}`);
+          const response = await fetch(\`/getTopItems?months=\${months}\`);
           const data = await response.json();
           document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
         } catch (error) {
           console.error('Erro ao buscar dados:', error);
+          document.getElementById('result').innerHTML = 'Erro ao buscar dados, tente novamente.';
         }
       }
     </script>
@@ -54,12 +61,16 @@ app.get('/oauth2callback', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
+  
+  // Armazenando tokens de forma segura (usando sessão)
+  req.session.tokens = tokens;
+  
   res.redirect('/');
 });
 
 // Função para ler dados do Google Sheets
 app.get('/getSheetData', async (req, res) => {
-  const spreadsheetId = process.env.1WklxIh-FT_Rxpxqo8PRHV1vpj55wAZhdG46wpLuijOs;
+  const spreadsheetId = process.env.SPREADSHEET_ID;
   const range = 'PB NOVO!A1:Z1000';
 
   try {
@@ -75,7 +86,7 @@ app.get('/getSheetData', async (req, res) => {
 
 // Rota para obter os top 5 itens mais vendidos por representante
 app.get('/getTopItems', async (req, res) => {
-  const spreadsheetId = process.env.1WklxIh-FT_Rxpxqo8PRHV1vpj55wAZhdG46wpLuijOs;
+  const spreadsheetId = process.env.SPREADSHEET_ID;
   const range = 'PB NOVO!A1:Z1000';
   const months = parseInt(req.query.months) || 3;
 
@@ -130,9 +141,9 @@ app.get('/getTopItems', async (req, res) => {
   }
 });
 
-// Exportando para a Vercel
-module.exports = app;
+// Iniciando o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
 
-
-// Exportando para a Vercel
 module.exports = app;
