@@ -36,6 +36,9 @@ app.get('/oauth2callback', async (req, res) => {
   oauth2Client.setCredentials(tokens);
   res.redirect('/');
 });
+app.get('/', (req, res) => {
+  res.send('Autenticado com sucesso! Agora você pode visualizar os dados.');
+});
 
 // Função para ler dados do Google Sheets
 app.get('/getSheetData', async (req, res) => {
