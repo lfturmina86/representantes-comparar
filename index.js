@@ -86,9 +86,9 @@ app.get('/getSheetData', async (req, res) => {
 
 // Função para gerar tabela HTML dos dados
 function generateHtmlTable(data) {
-  let html = '<table border="1"><tr><th>Representante</th><th>Item</th><th>Quantidade</th></tr>';
+  let html = '<table border="1"><tr><th>Representante</th><th>Soma do VLR</th><th>Item</th><th>Quantidade</th></tr>';
   data.forEach(entry => {
-    html += `<tr><td>${entry.rep}</td><td>${entry.item}</td><td>${entry.quantity}</td></tr>`;
+    html += `<tr><td>${entry.rep}</td><td>${entry.totalVLR}</td><td>${entry.item}</td><td>${entry.quantity}</td></tr>`;
   });
   html += '</table>';
   return html;
@@ -123,7 +123,8 @@ app.get('/getTopItems', async (req, res) => {
         date: new Date(row[dateIndex]),
         rep: row[repIndex],
         item: row[itemIndex],
-        quantity: parseInt(row[qtyIndex]) || 0
+        quantity: parseInt(row[qtyIndex]) || 0,
+        VLR: parseFloat(row[qtyIndex]) || 0 // Supondo que o valor do VLR seja na mesma coluna de quantidade
       }))
       .filter(entry => {
         const diffMonths = (now.getFullYear() - entry.date.getFullYear()) * 12 + (now.getMonth() - entry.date.getMonth());
@@ -131,18 +132,22 @@ app.get('/getTopItems', async (req, res) => {
       });
 
     const repMap = {};
-    filteredData.forEach(({ rep, item, quantity }) => {
+    filteredData.forEach(({ rep, item, quantity, VLR }) => {
       if (!repMap[rep]) repMap[rep] = {};
-      repMap[rep][item] = (repMap[rep][item] || 0) + quantity;
+      if (!repMap[rep][item]) repMap[rep][item] = { quantity: 0, totalVLR: 0 };
+      repMap[rep][item].quantity += quantity;
+      repMap[rep][item].totalVLR += VLR;
     });
 
     const result = Object.keys(repMap).map(rep => ({
       rep,
       topItems: Object.entries(repMap[rep])
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([item, quantity]) => ({ item, quantity }))
+        .map(([item, { quantity, totalVLR }]) => ({ item, quantity, totalVLR }))
+        .sort((a, b) => b.totalVLR - a.totalVLR) // Ordena por totalVLR em ordem decrescente
     }));
+
+    // Organizar por COD REP (rep)
+    result.sort((a, b) => a.rep.localeCompare(b.rep));
 
     // Gerar tabela HTML
     const tableHtml = generateHtmlTable(result.flatMap(rep => rep.topItems));
