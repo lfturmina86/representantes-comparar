@@ -121,10 +121,10 @@ app.get('/getTopItems', async (req, res) => {
     const filteredData = rows.slice(1)
       .map(row => ({
         date: new Date(row[dateIndex]),
-        rep: row[repIndex],
+        rep: row[repIndex] ? row[repIndex].trim() : '', // Verificando e limpando espaços
         item: row[itemIndex],
         quantity: parseInt(row[qtyIndex]) || 0,
-        VLR: parseFloat(row[qtyIndex]) || 0 // Supondo que o valor do VLR seja na mesma coluna de quantidade
+        VLR: parseFloat(row[qtyIndex]) || 0
       }))
       .filter(entry => {
         const diffMonths = (now.getFullYear() - entry.date.getFullYear()) * 12 + (now.getMonth() - entry.date.getMonth());
@@ -133,6 +133,7 @@ app.get('/getTopItems', async (req, res) => {
 
     const repMap = {};
     filteredData.forEach(({ rep, item, quantity, VLR }) => {
+      if (!rep) return; // Ignorar registros sem representante
       if (!repMap[rep]) repMap[rep] = {};
       if (!repMap[rep][item]) repMap[rep][item] = { quantity: 0, totalVLR: 0 };
       repMap[rep][item].quantity += quantity;
