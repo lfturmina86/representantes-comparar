@@ -18,7 +18,24 @@ app.use(bodyParser.json());
 
 // Rota para a raiz ("/")
 app.get('/', (req, res) => {
-  res.send('<h1>Bem-vindo ao App de Comparação de Representantes</h1><p><a href="/auth">Autentique-se com o Google</a></p>');
+  res.send(`
+    <h1>Bem-vindo ao App de Comparação de Representantes</h1>
+    <p><a href="/auth">Autentique-se com o Google</a></p>
+    <button onclick="fetchTopItems(3)">Top 5 (3 meses)</button>
+    <button onclick="fetchTopItems(6)">Top 5 (6 meses)</button>
+    <button onclick="fetchTopItems(12)">Top 5 (12 meses)</button>
+    <div id="result"></div>
+    <script>
+      function fetchTopItems(months) {
+        fetch(`/getTopItems?months=${months}`)
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+          })
+          .catch(error => console.error('Erro ao buscar dados:', error));
+      }
+    </script>
+  `);
 });
 
 // Autenticação e autorização do Google OAuth2
@@ -35,7 +52,7 @@ app.get('/oauth2callback', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
-  res.send('<h1>Autenticado com sucesso!</h1><p>Agora você pode visualizar os dados. <a href="/getSheetData">Clique aqui para ver os dados da planilha.</a></p>');
+  res.redirect('/');
 });
 
 // Função para ler dados do Google Sheets
