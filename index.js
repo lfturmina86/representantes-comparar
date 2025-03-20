@@ -1,6 +1,5 @@
 const express = require('express');
 const { google } = require('googleapis');
-const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -12,8 +11,10 @@ const CLIENT_SECRET = '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';
 const REDIRECT_URI = 'https://representantes-comparar.vercel.app/oauth2callback';  // URL de callback da Vercel
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-
 const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+
+// Middleware para JSON
+app.use(bodyParser.json());
 
 // Autenticação e autorização do Google OAuth2
 app.get('/auth', (req, res) => {
@@ -47,7 +48,5 @@ app.get('/getSheetData', async (req, res) => {
   }
 });
 
-// Inicializa o servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+// Exportando para a Vercel
+module.exports = app;
