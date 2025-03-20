@@ -30,13 +30,12 @@ app.get('/auth', (req, res) => {
   res.redirect(authUrl);
 });
 
+// Rota de callback do Google OAuth2
 app.get('/oauth2callback', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
-  res.redirect('/');
-app.get('/', (req, res) => {
-  res.send('Autenticado com sucesso! Agora você pode visualizar os dados.');
+  res.send('<h1>Autenticado com sucesso!</h1><p>Agora você pode visualizar os dados. <a href="/getSheetData">Clique aqui para ver os dados da planilha.</a></p>');
 });
 
 // Função para ler dados do Google Sheets
@@ -57,4 +56,3 @@ app.get('/getSheetData', async (req, res) => {
 
 // Exportando para a Vercel
 module.exports = app;
-
