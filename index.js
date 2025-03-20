@@ -54,5 +54,62 @@ app.get('/getSheetData', async (req, res) => {
   }
 });
 
+// Rota para obter os top 5 itens mais vendidos por representante
+app.get('/getTopItems', async (req, res) => {
+    const spreadsheetId = '1WklxIh-FT_Rxpxqo8PRHV1vpj55wAZhdG46wpLuijOs';
+    const range = 'PB NOVO!A1:Z1000';
+    const months = parseInt(req.query.months) || 3;
+
+    try {
+        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        const rows = response.data.values;
+        if (!rows || rows.length === 0) {
+            return res.status(404).json({ error: 'Nenhum dado encontrado' });
+        }
+
+        const headers = rows[0];
+        const dateIndex = headers.indexOf("Data");
+        const repIndex = headers.indexOf("Representante");
+        const itemIndex = headers.indexOf("Item");
+        const qtyIndex = headers.indexOf("Quantidade");
+
+        if (dateIndex === -1 || repIndex === -1 || itemIndex === -1 || qtyIndex === -1) {
+            return res.status(500).json({ error: "Estrutura da planilha inválida" });
+        }
+
+        const now = new Date();
+        const filteredData = rows.slice(1)
+            .map(row => ({
+                date: new Date(row[dateIndex]),
+                rep: row[repIndex],
+                item: row[itemIndex],
+                quantity: parseInt(row[qtyIndex]) || 0
+            }))
+            .filter(entry => {
+                const diffMonths = (now.getFullYear() - entry.date.getFullYear()) * 12 + (now.getMonth() - entry.date.getMonth());
+                return diffMonths <= months;
+            });
+
+        const repMap = {};
+        filteredData.forEach(({ rep, item, quantity }) => {
+            if (!repMap[rep]) repMap[rep] = {};
+            repMap[rep][item] = (repMap[rep][item] || 0) + quantity;
+        });
+
+        const result = Object.keys(repMap).map(rep => ({
+            rep,
+            topItems: Object.entries(repMap[rep])
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([item, quantity]) => ({ item, quantity }))
+        }));
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao processar os dados');
+    }
+});
+
 // Exportando para a Vercel
 module.exports = app;
