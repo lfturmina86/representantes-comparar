@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
         try {
           const response = await fetch(\`/getTopItems?months=\${months}\`);
           const data = await response.json();
-          document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+          document.getElementById('result').innerHTML = data.tableHtml;
         } catch (error) {
           console.error('Erro ao buscar dados:', error);
           document.getElementById('result').innerHTML = 'Erro ao buscar dados, tente novamente.';
@@ -83,6 +83,16 @@ app.get('/getSheetData', async (req, res) => {
     res.status(500).send('Erro ao obter dados do Google Sheets');
   }
 });
+
+// Função para gerar tabela HTML dos dados
+function generateHtmlTable(data) {
+  let html = '<table border="1"><tr><th>Representante</th><th>Item</th><th>Quantidade</th></tr>';
+  data.forEach(entry => {
+    html += `<tr><td>${entry.rep}</td><td>${entry.item}</td><td>${entry.quantity}</td></tr>`;
+  });
+  html += '</table>';
+  return html;
+}
 
 // Rota para obter os top 5 itens mais vendidos por representante
 app.get('/getTopItems', async (req, res) => {
@@ -134,7 +144,10 @@ app.get('/getTopItems', async (req, res) => {
         .map(([item, quantity]) => ({ item, quantity }))
     }));
 
-    res.json(result);
+    // Gerar tabela HTML
+    const tableHtml = generateHtmlTable(result.flatMap(rep => rep.topItems));
+
+    res.json({ tableHtml });
   } catch (error) {
     console.error(error);
     res.status(500).send('Erro ao processar os dados');
