@@ -35,7 +35,6 @@ app.get('/oauth2callback', async (req, res) => {
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
   res.redirect('/');
-});
 app.get('/', (req, res) => {
   res.send('Autenticado com sucesso! Agora você pode visualizar os dados.');
 });
