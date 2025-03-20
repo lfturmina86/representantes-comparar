@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparar Representantes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Selecione Representantes para Comparar</h1>
+    <button id="compareBtn">Comparar Representantes</button>
+    <div class="buttons">
+      <button onclick="getSheetData()">Obter Dados da Planilha</button>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    async function getSheetData() {
+      const response = await fetch('/getSheetData'); // API no backend
+      const data = await response.json();
+      document.getElementById('results').innerHTML = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById('compareBtn').addEventListener('click', () => {
+      const reps = prompt('Digite os códigos dos representantes separados por vírgula');
+      alert(`Comparando os representantes: ${reps}`);
+      // Enviar os representantes selecionados para o backend
+    });
+  </script>
+</body>
+</html>
+
