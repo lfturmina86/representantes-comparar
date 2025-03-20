@@ -7,9 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configuração do Google Sheets API
-const CLIENT_ID = 'SEU_CLIENT_ID';
-const CLIENT_SECRET = 'SEU_CLIENT_SECRET';
-const REDIRECT_URI = 'https://seu-dominio.vercel.app/oauth2callback';  // URL de callback da Vercel
+const CLIENT_ID = '911431976768-249r4fdg228co8lbbjcfdateq3bhqcm5.apps.googleusercontent.com';
+const CLIENT_SECRET = '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';
+const REDIRECT_URI = 'https://representantes-comparar.vercel.app/oauth2callback';  // URL de callback da Vercel
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
