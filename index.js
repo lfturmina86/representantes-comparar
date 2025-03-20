@@ -16,6 +16,11 @@ const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
 // Middleware para JSON
 app.use(bodyParser.json());
 
+// Rota para a raiz ("/")
+app.get('/', (req, res) => {
+  res.send('<h1>Bem-vindo ao App de Comparação de Representantes</h1><p><a href="/auth">Autentique-se com o Google</a></p>');
+});
+
 // Autenticação e autorização do Google OAuth2
 app.get('/auth', (req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
@@ -50,3 +55,4 @@ app.get('/getSheetData', async (req, res) => {
 
 // Exportando para a Vercel
 module.exports = app;
+
