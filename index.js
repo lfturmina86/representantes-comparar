@@ -33,8 +33,8 @@ app.get('/oauth2callback', async (req, res) => {
 
 // Função para ler dados do Google Sheets
 app.get('/getSheetData', async (req, res) => {
-  const spreadsheetId = 'SEU_SPREADSHEET_ID';  // Substitua pelo ID do seu Google Sheet
-  const range = 'NOME_DA_ABA!A1:Z1000';  // Ajuste o intervalo conforme necessário
+  const spreadsheetId = '1WklxIh-FT_Rxpxqo8PRHV1vpj55wAZhdG46wpLuijOs';  // Substitua pelo ID do seu Google Sheet
+  const range = 'PB NOVO!A1:Z1000';  // Ajuste o intervalo conforme necessário
 
   try {
     const response = await sheets.spreadsheets.values.get({
