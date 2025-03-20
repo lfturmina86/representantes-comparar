@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
         try {
           const response = await fetch(\`/getTopItems?months=\${months}\`);
           const data = await response.json();
-          document.getElementById('result').innerHTML = data.tableHtml;
+          document.getElementById('result').innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
         } catch (error) {
           console.error('Erro ao buscar dados:', error);
           document.getElementById('result').innerHTML = 'Erro ao buscar dados, tente novamente.';
@@ -84,16 +84,6 @@ app.get('/getSheetData', async (req, res) => {
   }
 });
 
-// Função para gerar tabela HTML dos dados
-function generateHtmlTable(data) {
-  let html = '<table border="1"><tr><th>Representante</th><th>Soma do VLR</th><th>Item</th><th>Quantidade</th></tr>';
-  data.forEach(entry => {
-    html += `<tr><td>${entry.rep}</td><td>${entry.totalVLR}</td><td>${entry.item}</td><td>${entry.quantity}</td></tr>`;
-  });
-  html += '</table>';
-  return html;
-}
-
 // Rota para obter os top 5 itens mais vendidos por representante
 app.get('/getTopItems', async (req, res) => {
   const spreadsheetId = process.env.SPREADSHEET_ID;
@@ -121,39 +111,37 @@ app.get('/getTopItems', async (req, res) => {
     const filteredData = rows.slice(1)
       .map(row => ({
         date: new Date(row[dateIndex]),
-        rep: row[repIndex] ? String(row[repIndex]).trim() : '', // Garantir que o COD REP seja tratado como string
+        rep: row[repIndex].toString().trim(), // Tratar como string
         item: row[itemIndex],
-        quantity: parseInt(row[qtyIndex]) || 0,
-        VLR: parseFloat(row[qtyIndex]) || 0
+        quantity: parseInt(row[qtyIndex]) || 0
       }))
       .filter(entry => {
         const diffMonths = (now.getFullYear() - entry.date.getFullYear()) * 12 + (now.getMonth() - entry.date.getMonth());
         return diffMonths <= months;
       });
 
+    // Mapeando os dados por representante e item
     const repMap = {};
-    filteredData.forEach(({ rep, item, quantity, VLR }) => {
-      if (!rep) return; // Ignorar registros sem representante
+    filteredData.forEach(({ rep, item, quantity }) => {
       if (!repMap[rep]) repMap[rep] = {};
-      if (!repMap[rep][item]) repMap[rep][item] = { quantity: 0, totalVLR: 0 };
-      repMap[rep][item].quantity += quantity;
-      repMap[rep][item].totalVLR += VLR;
+      repMap[rep][item] = (repMap[rep][item] || 0) + quantity;
     });
 
-    const result = Object.keys(repMap).map(rep => ({
-      rep, // O "COD REP" agora é tratado como string (char)
-      topItems: Object.entries(repMap[rep])
-        .map(([item, { quantity, totalVLR }]) => ({ item, quantity, totalVLR }))
-        .sort((a, b) => b.totalVLR - a.totalVLR) // Ordena por totalVLR em ordem decrescente
-    }));
+    // Ordenando por representante e organizando os itens por quantidade
+    const result = Object.keys(repMap).map(rep => {
+      const topItems = Object.entries(repMap[rep])
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5) // Top 5 itens
+        .map(([item, quantity]) => ({ item, quantity }));
 
-    // Organizar por COD REP (rep)
+      return { rep, topItems };
+    });
+
+    // Ordenando os resultados por REPRESENTANTE
     result.sort((a, b) => a.rep.localeCompare(b.rep));
 
-    // Gerar tabela HTML
-    const tableHtml = generateHtmlTable(result.flatMap(rep => rep.topItems));
-
-    res.json({ tableHtml });
+    // Enviar resposta
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).send('Erro ao processar os dados');
