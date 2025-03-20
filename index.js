@@ -121,7 +121,7 @@ app.get('/getTopItems', async (req, res) => {
     const filteredData = rows.slice(1)
       .map(row => ({
         date: new Date(row[dateIndex]),
-        rep: row[repIndex] ? row[repIndex].trim() : '', // Verificando e limpando espaços
+        rep: row[repIndex] ? String(row[repIndex]).trim() : '', // Garantir que o COD REP seja tratado como string
         item: row[itemIndex],
         quantity: parseInt(row[qtyIndex]) || 0,
         VLR: parseFloat(row[qtyIndex]) || 0
@@ -141,7 +141,7 @@ app.get('/getTopItems', async (req, res) => {
     });
 
     const result = Object.keys(repMap).map(rep => ({
-      rep,
+      rep, // O "COD REP" agora é tratado como string (char)
       topItems: Object.entries(repMap[rep])
         .map(([item, { quantity, totalVLR }]) => ({ item, quantity, totalVLR }))
         .sort((a, b) => b.totalVLR - a.totalVLR) // Ordena por totalVLR em ordem decrescente
